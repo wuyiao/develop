@@ -1,0 +1,55 @@
+SUBDIR="`echo $(CURDIR) | sed -e s%^$(TOPLEVEL)%%`"
+
+#Workaround Ubuntu silliness
+ECHO="`which echo`" "-e"
+
+ifeq ($(COLOR), 1)
+	RED='\e[0;31m'
+	BLUE='\e[0;34m'
+	GREEN='\e[0;32m'
+	NC='\e[0m'
+else
+	RED=
+	BLUE=
+	GREEN=
+	NC=
+endif
+
+ifeq ($(QUIET), 1)
+	CMD_QUIET=@
+	CMD_STATUS=$(ECHO)
+else
+	CMD_QUIET=
+	CMD_STATUS=true
+endif
+
+CFLAGS+=-I$(CURDIR)/internal
+
+objs-y += $(patsubst %/, %/built-in.o, $(dirs-y))
+$(objs-y): $(dirs-y)
+
+inc-y := $(dirs-y:%=-I$(CURDIR)/%/include)
+CFLAGS += $(inc-y)
+
+.PHONY: $(dirs-y)
+
+$(dirs-y):
+	@$(MAKE) $(MKFLAGS) -C $@ built-in.o
+
+built-in.o: $(objs-y)
+	@echo -ne $(BLUE)
+	@$(CMD_STATUS) "\tLD $(SUBDIR)/$@"
+	@echo -ne $(RED)
+	$(CMD_QUIET)$(LD) $(LDFLAGS) -r $^ -o $@ || ( \
+		echo -ne $(NC) && false )
+	@echo -ne $(NC)
+
+%.o: %.c
+	@$(ECHO) -ne $(BLUE)
+	@$(CMD_STATUS) "\tCC $(SUBDIR)/$<"
+	@$(ECHO) -ne $(RED)
+	$(CMD_QUIET)$(CC) -g -c $(CFLAGS) -o $@ $< || ( \
+		$(ECHO) -ne $(NC) && false )
+	@$(ECHO) -ne $(NC)
+
+

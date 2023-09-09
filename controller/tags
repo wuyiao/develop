@@ -1,0 +1,147 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BLUE	net/connector.c	56;"	d	file:
+BUCKETMASK	net/connector.c	46;"	d	file:
+BUCKETSIZ	net/connector.c	45;"	d	file:
+CC_REBOOT	include/message.h	/^    CC_REBOOT,$/;"	e	enum:__anon1
+CC_RESET	include/message.h	/^    CC_RESET,$/;"	e	enum:__anon1
+CFLAGS-y	Makefile	/^CFLAGS-y = -g -O0 -Wall -I$(CURDIR)\/include$/;"	m
+CLEAR	net/connector.c	62;"	d	file:
+CLEAR_ROW	net/connector.c	63;"	d	file:
+COLOR	Makefile	/^export COLOR ?= 1$/;"	m
+CONTROLLER_CONFIG_H	include/config.h	2;"	d
+CONTROLLER_MESSAGE_H	include/message.h	2;"	d
+CONTROLLER_UBUS_H	include/ubus.h	2;"	d
+DEBUG_LOGLEVEL	ubus.c	/^    DEBUG_LOGLEVEL,$/;"	e	enum:__anon2	file:
+DEFAULT_CONFIG_PATH	include/config.h	3;"	d
+EI_LINK	proto/include/mqtt.h	5;"	d
+GRN	net/connector.c	54;"	d	file:
+HIDE_CURSOR	net/connector.c	70;"	d	file:
+HIGHT_LIGHT	net/connector.c	74;"	d	file:
+LIBS	Makefile	/^LIBS=$(LIBS-y)$/;"	m
+LIBS-y	Makefile	/^LIBS-y = -luci -lubox -lubus -lmosquitto -lipc -ltlv -ljson-c -ldbg$/;"	m
+MAC2STR	ipc/ipc.c	21;"	d	file:
+MAC2STR	net/connector.c	49;"	d	file:
+MACSTR	ipc/ipc.c	22;"	d	file:
+MACSTR	net/connector.c	50;"	d	file:
+MOVEDOWN	net/connector.c	65;"	d	file:
+MOVELEFT	net/connector.c	66;"	d	file:
+MOVERIGHT	net/connector.c	67;"	d	file:
+MOVETO	net/connector.c	68;"	d	file:
+MOVEUP	net/connector.c	64;"	d	file:
+MQTT_H	proto/include/mqtt.h	2;"	d
+NONE	net/connector.c	60;"	d	file:
+PPD_IPC_H	ipc/include/ipc.h	2;"	d
+QUIET	Makefile	/^export QUIET ?= 1$/;"	m
+RED	net/connector.c	53;"	d	file:
+RESET	net/connector.c	76;"	d	file:
+RESET_CURSOR	net/connector.c	69;"	d	file:
+RESTORE_CURSOR	net/connector.c	73;"	d	file:
+ROOT	net/module.mk	/^ROOT = $(firstword $(subst eabi_env, eabi_env, $(PWD)))eabi_env$/;"	m
+SAVE_CURSOR	net/connector.c	72;"	d	file:
+SHOW_CURSOR	net/connector.c	71;"	d	file:
+TOPLEVEL	Makefile	/^export TOPLEVEL=$(CURDIR)$/;"	m
+UNDERLINE	net/connector.c	57;"	d	file:
+UNUSED	proto/mqtt.c	19;"	d	file:
+UN_HIGHT_LIGHT	net/connector.c	75;"	d	file:
+UTILS_H	include/utils.h	2;"	d
+YLW	net/connector.c	55;"	d	file:
+_DEBUG_MAX_	ubus.c	/^    _DEBUG_MAX_$/;"	e	enum:__anon2	file:
+b	config.c	/^static struct blob_buf b;$/;"	v	typeref:struct:blob_buf	file:
+b	ubus.c	/^static struct blob_buf b;$/;"	v	typeref:struct:blob_buf	file:
+benchmark	ipc/ipc.c	/^static void benchmark(struct uloop_timeout *timeout)$/;"	f	file:
+benchmark_timeout	ipc/ipc.c	/^static struct uloop_timeout benchmark_timeout;$/;"	v	typeref:struct:uloop_timeout	file:
+config_get_access_point	config.c	/^config_get_access_point(char *ip, int *port)$/;"	f
+config_init	config.c	/^int config_init(void)$/;"	f
+config_init_package	config.c	/^config_init_package(const char *config)$/;"	f	file:
+config_msg_handler	message.c	/^void config_msg_handler(void *msg, int len)$/;"	f
+config_path	config.c	/^const char *config_path = DEFAULT_CONFIG_PATH;$/;"	v
+connack_result	proto/mqtt.c	/^static int connack_result = 0;$/;"	v	file:
+connector_SRCS	net/module.mk	/^connector_SRCS := $(addprefix $(TOPLEVEL)\/connector\/, $(connector_SRCS))$/;"	m
+connector_SRCS	net/module.mk	/^connector_SRCS := connector.c$/;"	m
+connector_init	net/connector.c	/^void connector_init()$/;"	f
+connector_timeout	net/connector.c	/^static struct uloop_timeout connector_timeout;$/;"	v	typeref:struct:uloop_timeout	file:
+consume_list	net/connector.c	/^static struct list_head produce_list, consume_list;$/;"	v	typeref:struct:	file:
+control_msg_handler	message.c	/^void control_msg_handler(void *msg, int len)$/;"	f
+controller_add_object	ubus.c	/^static void controller_add_object(struct ubus_object *obj)$/;"	f	file:
+controller_debug	ubus.c	/^controller_debug(struct ubus_context *ctx, struct ubus_object *obj,$/;"	f	file:
+controller_debug_policy	ubus.c	/^static const struct blobmsg_policy controller_debug_policy[_DEBUG_MAX_] = {$/;"	v	typeref:struct:blobmsg_policy	file:
+controller_handle_signal	main.c	/^controller_handle_signal(int signo)$/;"	f	file:
+controller_setup_signals	main.c	/^controller_setup_signals(void)$/;"	f	file:
+controller_statistic	ubus.c	/^controller_statistic(struct ubus_context *ctx, struct ubus_object *obj,$/;"	f	file:
+controller_ubus_add_fd	ubus.c	/^controller_ubus_add_fd(void)$/;"	f	file:
+controller_ubus_connection_lost	ubus.c	/^controller_ubus_connection_lost(struct ubus_context *ctx)$/;"	f	file:
+controller_ubus_done	ubus.c	/^controller_ubus_done(void)$/;"	f
+controller_ubus_init	ubus.c	/^controller_ubus_init(const char *path)$/;"	f
+controller_ubus_reconnect_timer	ubus.c	/^controller_ubus_reconnect_timer(struct uloop_timeout *timeout)$/;"	f	file:
+devices	net/connector.c	/^static struct hlist_head devices[BUCKETSIZ];$/;"	v	typeref:struct:hlist_head	file:
+dirs-y	Makefile	/^dirs-y := ipc\/ net\/ proto\/$/;"	m
+dirs-y	ipc/Makefile	/^dirs-y :=$/;"	m
+dirs-y	net/Makefile	/^dirs-y :=$/;"	m
+dirs-y	proto/Makefile	/^dirs-y :=$/;"	m
+fix5_from_float	utils.c	/^fix5_t fix5_from_float(float a)$/;"	f
+fix5_one	utils.c	/^const fix5_t fix5_one = 0x0100;$/;"	v
+fix5_t	include/utils.h	/^typedef unsigned short fix5_t;$/;"	t
+fix5_t	utils.c	/^typedef unsigned short fix5_t;$/;"	t	file:
+fix5_to_float	utils.c	/^float fix5_to_float(fix5_t a)$/;"	f
+get_ifip	net/connector.c	/^get_ifip($/;"	f
+get_ifmac	net/connector.c	/^get_ifmac( $/;"	f
+get_ifname	net/connector.c	/^get_ifname($/;"	f
+get_peer_mac	net/connector.c	/^get_peer_mac($/;"	f	file:
+get_temperature	proto/mqtt.c	/^int get_temperature(void)$/;"	f
+ifname	net/connector.c	/^char *ifname;$/;"	v
+ipc_ctx	ipc/ipc.c	/^static struct ipc_context ipc_ctx;$/;"	v	typeref:struct:ipc_context	file:
+ipc_init	ipc/ipc.c	/^int ipc_init(void)$/;"	f
+ipc_msg_parse	ipc/ipc.c	/^static int ipc_msg_parse(char *str, int len)$/;"	f	file:
+ipcs	ipc/ipc.c	/^static struct ipc_context *ipcs;$/;"	v	typeref:struct:ipc_context	file:
+ipcs_close	ipc/ipc.c	/^static void ipcs_close(struct ustream *s)$/;"	f	file:
+last_mid	proto/mqtt.c	/^int last_mid = 0;$/;"	v
+main	main.c	/^int main(int argc, char *argv[])$/;"	f
+main_object	ubus.c	/^static struct ubus_object main_object = {$/;"	v	typeref:struct:ubus_object	file:
+main_object_methods	ubus.c	/^static struct ubus_method main_object_methods[] = {$/;"	v	typeref:struct:ubus_method	file:
+main_object_type	ubus.c	/^static struct ubus_object_type main_object_type =$/;"	v	typeref:struct:ubus_object_type	file:
+make_opts	build.sh	/^make_opts()$/;"	f
+mosq	proto/mqtt.c	/^static struct mosquitto *mosq = NULL;$/;"	v	typeref:struct:mosquitto	file:
+mosquitto_client	proto/mqtt.c	/^static struct uloop_fd mosquitto_client;$/;"	v	typeref:struct:uloop_fd	file:
+mosquitto_client_cb	proto/mqtt.c	/^static void mosquitto_client_cb(struct uloop_fd *fd, unsigned int events)$/;"	f	file:
+mqtt_init	proto/mqtt.c	/^int mqtt_init()$/;"	f
+msg_count	proto/mqtt.c	/^int msg_count = 0;$/;"	v
+my_connect_callback	proto/mqtt.c	/^void my_connect_callback(struct mosquitto *mosq, void *obj, int result, int flags, const mosquitto_property *properties)$/;"	f
+my_log_callback	proto/mqtt.c	/^void my_log_callback(struct mosquitto *mosq, void *obj, int level, const char *str)$/;"	f
+my_message_callback	proto/mqtt.c	/^void my_message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message, const mosquitto_property *properties)$/;"	f
+my_publish_callback	proto/mqtt.c	/^void my_publish_callback(struct mosquitto *mosq, void *obj, int mid, int reason_code, const mosquitto_property *properties)$/;"	f
+my_signal_handler	proto/mqtt.c	/^void my_signal_handler(int signum)$/;"	f
+my_subscribe_callback	proto/mqtt.c	/^void my_subscribe_callback(struct mosquitto *mosq, void *obj, int mid, int qos_count, const int *granted_qos)$/;"	f
+net_connect	net/connector.c	/^int net_connect()$/;"	f
+obj-y	Makefile	/^obj-y := main.o ubus.o config.o message.o utils.o$/;"	m
+obj-y	ipc/Makefile	/^obj-y := ipc.o$/;"	m
+obj-y	net/Makefile	/^obj-y := connector.o$/;"	m
+obj-y	proto/Makefile	/^obj-y := mqtt.o$/;"	m
+print_version	proto/mqtt.c	/^void print_version(void)$/;"	f
+process_messages	proto/mqtt.c	/^bool process_messages = true;$/;"	v
+produce_list	net/connector.c	/^static struct list_head produce_list, consume_list;$/;"	v	typeref:struct:list_head	file:
+publish_sensor_data	proto/mqtt.c	/^void publish_sensor_data(struct mosquitto *mosq)$/;"	f
+received_nbytes	ipc/ipc.c	/^int received_nbytes = 0;$/;"	v
+send_data_to_remote_platform	net/connector.c	/^int send_data_to_remote_platform(void *data, int len)$/;"	f
+setnonblocking	net/connector.c	/^void setnonblocking(int fd) {$/;"	f
+sfd	ipc/ipc.c	/^static struct ustream_fd sfd;$/;"	v	typeref:struct:ustream_fd	file:
+sock	net/connector.c	/^static int sock;$/;"	v	file:
+system_fd_set_cloexec	ubus.c	/^void system_fd_set_cloexec(int fd)$/;"	f
+timed_out	proto/mqtt.c	/^static bool timed_out = false;$/;"	v	file:
+timeouts	net/connector.c	/^static struct list_head timeouts;$/;"	v	typeref:struct:list_head	file:
+topic_handler	proto/mqtt.c	/^void (* topic_handler[]) (void *msg, int len) = {$/;"	v
+topics	proto/mqtt.c	/^static char *topics[] = {$/;"	v	file:
+try_connect	net/connector.c	/^static void try_connect(struct uloop_timeout *timeout)$/;"	f	file:
+ubus_ctx	ubus.c	/^struct ubus_context *ubus_ctx = NULL;$/;"	v	typeref:struct:ubus_context
+ubus_path	ubus.c	/^static const char *ubus_path;$/;"	v	file:
+uci_controller	config.c	/^static struct uci_package *uci_controller;$/;"	v	typeref:struct:uci_package	file:
+uci_ctx	config.c	/^static struct uci_context *uci_ctx;$/;"	v	typeref:struct:uci_context	file:
+us	ipc/ipc.c	/^static struct ustream *us;$/;"	v	typeref:struct:ustream	file:
+usage	main.c	/^usage(const char *program_name)$/;"	f	file:
+ustream_read_cb	ipc/ipc.c	/^static void ustream_read_cb(struct ustream *s, int bytes)$/;"	f	file:
+ustream_state_cb	ipc/ipc.c	/^static void ustream_state_cb(struct ustream *s)$/;"	f	file:
+ustream_write_cb	ipc/ipc.c	/^static void ustream_write_cb(struct ustream *s, int bytes)$/;"	f	file:

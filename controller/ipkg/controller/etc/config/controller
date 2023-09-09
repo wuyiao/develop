@@ -1,0 +1,3 @@
+config mqtt
+	option ip '47.101.185.231'
+	option port '1883'

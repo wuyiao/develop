@@ -1,0 +1,12 @@
+Package: controller
+Version: 2021-03-19
+Depends: libc, ubox, ubi-utils
+Source: controller
+SourceName: controller
+License: Private
+Section: base
+SourceDateEpoch: 1616160955
+Maintainer: xuzhou <zhouxu@ei.link>
+Architecture: arm_cortex-a7_neon
+Installed-Size: 44867
+Description: system contoller

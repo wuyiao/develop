@@ -1,0 +1,27 @@
+
+config sx127x
+	option spidev 'spidev0.0'
+	option gpio_m1 'gpio42'
+	option gpio_m0 'gpio43'
+	option gpio_pwr 'gpio44'
+	option gpio_dio 'gpio87'
+	option gpio_rst 'gpio88'
+	option gpio_nss 'gpio124'
+	option modem '1'
+	option freq '475300000'
+	option bw '0'
+	option sf '7'
+	option cr '5'
+	option nocrc '0'
+	option prlen '8'
+	option syncword '18'
+	option invertiq '0'
+	option power '16'
+	option desc 'RADIO'
+	option gwid 'e.i'
+	option disabled '0'
+
+config rfid
+	option spidev 'spidev0.0'
+	option gpio_rst 'gpio30'
+	option disabled '0'

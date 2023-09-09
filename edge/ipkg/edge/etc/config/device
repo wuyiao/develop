@@ -1,0 +1,46 @@
+config gpio
+	option number '42'
+        option disabled '0'
+
+config gpio
+	option number '43'
+        option disabled '0'
+
+config gpio
+	option number '44'
+        option disabled '0'
+
+config gpio
+	option number '86'
+        option disabled '0'
+
+config gpio
+	option number '87'
+        option disabled '0'
+
+config gpio
+	option number '88'
+        option disabled '0'
+
+config serial
+	option device 'ttyUSB0'
+        option baudrate '115200'
+        option disabled '0'
+
+config serial
+	option device 'ttyUSB1'
+        option baudrate '115200'
+        option disabled '0'
+
+config serial
+	option device 'ttymxc5'
+        option baudrate '9600'
+        option disabled '0'
+
+config spi
+        option device 'spidev0.0'
+	option mode '0'
+	option speed '8000000'
+	option msb '0'
+	option bits_per_word '0'
+        option disabled '0'

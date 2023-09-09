@@ -1,0 +1,26 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2013 OpenWrt.org
+
+START=99
+USE_PROCD=1
+
+# echo 42 > /sys/class/gpio/export
+# echo 43 > /sys/class/gpio/export
+# echo "out" > /sys/class/gpio/gpio42/direction
+# echo "out" > /sys/class/gpio/gpio43/direction
+# echo "1" > /sys/class/gpio/gpio42/value
+# echo "0" > /sys/class/gpio/gpio43/value
+
+uci set network.myconfig=interface
+uci set network.myconfig.proto=dhcp
+uci set network.myconfig.device=eth1
+uci commit network
+/etc/init.d/network restart
+sleep 10
+
+start_service()
+{
+	procd_open_instance
+	procd_set_param command "/usr/bin/controller"
+	procd_close_instance
+}

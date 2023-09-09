@@ -1,0 +1,12 @@
+Package: edge
+Version: 2021-03-19
+Depends: libc, ubox, ubi-utils
+Source: edge 
+SourceName: edge
+License: Private
+Section: base
+SourceDateEpoch: 1616160955
+Maintainer: xuzhou <zhouxu@ei.link>
+Architecture: arm_cortex-a7_neon
+Installed-Size: 228558
+Description: system contoller
