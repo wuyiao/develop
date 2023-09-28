@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
     config_init();
     
-    //connector_init();
+    // connector_init();
 
     ipc_init();
     mqtt_init();

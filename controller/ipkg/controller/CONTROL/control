@@ -8,5 +8,5 @@ Section: base
 SourceDateEpoch: 1616160955
 Maintainer: xuzhou <zhouxu@ei.link>
 Architecture: arm_cortex-a7_neon
-Installed-Size: 44867
+Installed-Size: 45459
 Description: system contoller

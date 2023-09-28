@@ -14,15 +14,27 @@
 #include <cbor.h>
 #include <tlv_box.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+
 #include "icc.h"
 #include "net.h"
 #include "utils.h"
 #include "mqtt.h"
 
+
+#define FIFO_NAME "/tmp/mqtt_data"
+
+
 #ifndef MAC2STR
 #define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
 #endif
+
+static int pipe_fd;
+
 static struct uloop_timeout benchmark_timeout;
 int received_nbytes = 0;
 
@@ -31,18 +43,19 @@ static struct ipc_context *ipcs;
 static struct ustream *us;
 static struct ustream_fd sfd;
 
+static double transform(double value)
+{
+    value=(int)(1000*value+0.5);
+    value=value/1000;
+    return value;
+}
+
+
 static void benchmark(struct uloop_timeout *timeout)
 {
     printf("speed: %d | %d kbps\n", received_nbytes,  received_nbytes / 1024);
     received_nbytes = 0;
     uloop_timeout_set(&benchmark_timeout, 1000);
-}
-
-static double scale(double value)
-{
-    value = (int)100000 * value + 0.5;
-    value = value /100000;
-    return value;
 }
 
 static int ipc_msg_parse(char *str, int len)
@@ -505,6 +518,12 @@ void edge_msg_parse(char *msg, int nbytes)
     char buf[32] = {0};
     json_object *obj;
     struct cbor_load_result result;
+    
+    if((nbytes == 92) || (nbytes == 194)){
+    }else{
+        ULOG_DEBUG("edge_msg_parse nbytes : %d error\n",nbytes);
+        return;
+    }
     cbor_item_t* item = cbor_load(msg, nbytes, &result);
 
     if (result.error.code != CBOR_ERR_NONE) {
@@ -570,7 +589,6 @@ void edge_msg_parse(char *msg, int nbytes)
                             uint16_t SN = cbor_get_uint16(cbor_array_handle(item)[5]);
 
                             uint16_t WS_dp = cbor_get_uint16(cbor_array_handle(item)[6]);
-                            ULOG_DEBUG("WS_dp : %d \n",WS_dp);
                             uint16_t WS_ui = cbor_get_uint16(cbor_array_handle(item)[7]);
                             uint16_t WS_max = cbor_get_uint16(cbor_array_handle(item)[8]);
                             uint16_t WS_min = cbor_get_uint16(cbor_array_handle(item)[9]);
@@ -609,13 +627,14 @@ void edge_msg_parse(char *msg, int nbytes)
                             json_object_object_add(obj, "SN", json_object_new_string(buf));
 
                             json_object_object_add(obj, "WS_ui", json_object_new_int(WS_ui));
-                            json_object_object_add(obj, "WS_max", json_object_new_double(W_FACTOR(WS_max)));
-                            json_object_object_add(obj, "WS_min", json_object_new_double(W_FACTOR(WS_min)));
+                            
+                            json_object_object_add(obj, "WS_max", json_object_new_double(transform(W_FACTOR(WS_max))));
+                            json_object_object_add(obj, "WS_min", json_object_new_double(transform(W_FACTOR(WS_min))));
 
                             json_object_object_add(obj, "AS", json_object_new_int(AS));
 
-                            json_object_object_add(obj, "Dw_M", json_object_new_double(W_FACTOR(Dw_M)));
-                            json_object_object_add(obj, "Iw_M", json_object_new_double(W_FACTOR(Iw_M)));
+                            json_object_object_add(obj, "Dw_M", json_object_new_double(transform(W_FACTOR(Dw_M))));
+                            json_object_object_add(obj, "Iw_M", json_object_new_double(transform(W_FACTOR(Iw_M))));
                             json_object_object_add(obj, "MJ_SJ", json_object_new_int(St_h * 60 * 60 + St_m * 60 + St_s));
 
                             json_object_object_add(obj, "Fw_status", json_object_new_int(Fw_status));
@@ -624,8 +643,8 @@ void edge_msg_parse(char *msg, int nbytes)
                             json_object_object_add(obj, "Socket_status", json_object_new_int(Socket_status));
                             json_object_object_add(obj, "Sterilized_status", json_object_new_int(Sterilized_status));
 
-                            json_object_object_add(obj, "Dw_set", json_object_new_double(W_FACTOR(Dw_set)));
-                            json_object_object_add(obj, "Iw_set", json_object_new_double(W_FACTOR(Iw_set)));
+                            json_object_object_add(obj, "Dw_set", json_object_new_double(transform(W_FACTOR(Dw_set))));
+                            json_object_object_add(obj, "Iw_set", json_object_new_double(transform(W_FACTOR(Iw_set))));
                             json_object_object_add(obj, "SL_set", json_object_new_int(SL_set));
 
                             json_object_object_add(obj, "fan_switch", json_object_new_int(fan_switch));
@@ -636,10 +655,11 @@ void edge_msg_parse(char *msg, int nbytes)
 
                             json_data = json_object_to_json_string_length(obj, 0, &length);
 
-                            ULOG_DEBUG("[%x]: %s\n", prea.data, json_data);
+                            ULOG_DEBUG("[%x]: %s len : %d \n", prea.data, json_data,length);
                             // sprintf(buf, "kg/teste");
                             sprintf(buf, "edge3");
-                            mqtt_publish(buf, json_data, length, 2);
+                            mqtt_publish(buf, json_data, length, 0);
+                            // write(pipe_fd, json_data, length);
 
                         }
                         break;
@@ -782,16 +802,16 @@ void edge_msg_parse(char *msg, int nbytes)
                             json_object_object_add(obj, "CO2_DW", json_object_new_int(CO2_DW));
 
                             /* 8 */
-                            json_object_object_add(obj, "WD_MAX", json_object_new_double(WD_FACTOR(WD_MAX)));
-                            json_object_object_add(obj, "WD_MIN", json_object_new_double(WD_FACTOR(WD_MIN)));
-                            json_object_object_add(obj, "CO2_MAX", json_object_new_double(CO_FACTOR(CO2_MAX)));
-                            json_object_object_add(obj, "CO2_MIN", json_object_new_double(CO_FACTOR(CO2_MIN)));
+                            json_object_object_add(obj, "WD_MAX", json_object_new_double(transform(WD_FACTOR(WD_MAX))));
+                            json_object_object_add(obj, "WD_MIN", json_object_new_double(transform(WD_FACTOR(WD_MIN))));
+                            json_object_object_add(obj, "CO2_MAX", json_object_new_double(transform(CO_FACTOR(CO2_MAX))));
+                            json_object_object_add(obj, "CO2_MIN", json_object_new_double(transform(CO_FACTOR(CO2_MIN))));
 
-                            json_object_object_add(obj, "CL_WD", json_object_new_double(WD_FACTOR(CL_WD)));
-                            json_object_object_add(obj, "SD_WD", json_object_new_double(WD_FACTOR(SD_WD)));
+                            json_object_object_add(obj, "CL_WD", json_object_new_double(transform(WD_FACTOR(CL_WD))));
+                            json_object_object_add(obj, "SD_WD", json_object_new_double(transform(WD_FACTOR(SD_WD))));
 
-                            json_object_object_add(obj, "CL_CO2", json_object_new_double(CO_FACTOR(CL_CO2)));
-                            json_object_object_add(obj, "SD_CO2", json_object_new_double(CO_FACTOR(SD_CO2)));
+                            json_object_object_add(obj, "CL_CO2", json_object_new_double(transform(CO_FACTOR(CL_CO2))));
+                            json_object_object_add(obj, "SD_CO2", json_object_new_double(transform(CO_FACTOR(SD_CO2))));
 
                             json_object_object_add(obj, "JS_T", json_object_new_int(JS_h * 60 + JS_m));
                             json_object_object_add(obj, "SD_T", json_object_new_int(SD_h * 60 + SD_m));
@@ -809,46 +829,47 @@ void edge_msg_parse(char *msg, int nbytes)
 
                             json_object_object_add(obj, "DZ_T", json_object_new_double(DZ_T_h * 60 + DZ_T_m));
 
-                            json_object_object_add(obj, "DZ_W", json_object_new_double(WD_FACTOR(DZ_W)));
-                            json_object_object_add(obj, "DZ_CO2", json_object_new_double(CO_FACTOR(DZ_CO2)));
+                            json_object_object_add(obj, "DZ_W", json_object_new_double(transform(WD_FACTOR(DZ_W))));
+                            json_object_object_add(obj, "DZ_CO2", json_object_new_double(transform(CO_FACTOR(DZ_CO2))));
 
                             json_object_object_add(obj, "ZDS", json_object_new_int(ZDS));
                             json_object_object_add(obj, "SZ_ms", json_object_new_int(SD_ms));
 
                             json_object_object_add(obj, "DS1_h", json_object_new_int(DS1_h));
                             json_object_object_add(obj, "DS1_m", json_object_new_int(DS1_m));
-                            json_object_object_add(obj, "DS1_W", json_object_new_double(WD_FACTOR(DS1_W)));
-                            json_object_object_add(obj, "DS1_CO2", json_object_new_double(CO_FACTOR(DS1_CO2)));
+                            json_object_object_add(obj, "DS1_W", json_object_new_double(transform(WD_FACTOR(DS1_W))));
+                            json_object_object_add(obj, "DS1_CO2", json_object_new_double((CO_FACTOR(DS1_CO2))));
 
                             json_object_object_add(obj, "DS2_h", json_object_new_int(DS2_h));
                             json_object_object_add(obj, "DS2_m", json_object_new_int(DS2_m));
-                            json_object_object_add(obj, "DS2_W", json_object_new_double(WD_FACTOR(DS2_W)));
-                            json_object_object_add(obj, "DS2_CO2", json_object_new_double(CO_FACTOR(DS2_CO2)));
+                            json_object_object_add(obj, "DS2_W", json_object_new_double(transform(WD_FACTOR(DS2_W))));
+                            json_object_object_add(obj, "DS2_CO2", json_object_new_double(transform(CO_FACTOR(DS2_CO2))));
 
                             json_object_object_add(obj, "DS3_h", json_object_new_int(DS3_h));
                             json_object_object_add(obj, "DS3_m", json_object_new_int(DS3_m));
-                            json_object_object_add(obj, "DS3_W", json_object_new_double(WD_FACTOR(DS3_W)));
-                            json_object_object_add(obj, "DS3_CO2", json_object_new_double(CO_FACTOR(DS3_CO2)));
+                            json_object_object_add(obj, "DS3_W", json_object_new_double(transform(WD_FACTOR(DS3_W))));
+                            json_object_object_add(obj, "DS3_CO2", json_object_new_double(transform(CO_FACTOR(DS3_CO2))));
 
                             json_object_object_add(obj, "DS4_h", json_object_new_int(DS4_h));
                             json_object_object_add(obj, "DS4_m", json_object_new_int(DS4_m));
-                            json_object_object_add(obj, "DS4_W", json_object_new_double(WD_FACTOR(DS4_W)));
-                            json_object_object_add(obj, "DS4_CO2", json_object_new_double(CO_FACTOR(DS4_CO2)));
+                            json_object_object_add(obj, "DS4_W", json_object_new_double(transform(WD_FACTOR(DS4_W))));
+                            json_object_object_add(obj, "DS4_CO2", json_object_new_double(transform(CO_FACTOR(DS4_CO2))));
 
                             json_object_object_add(obj, "DS5_h", json_object_new_int(DS5_h));
                             json_object_object_add(obj, "DS5_m", json_object_new_int(DS5_m));
-                            json_object_object_add(obj, "DS5_W", json_object_new_double(WD_FACTOR(DS5_W)));
-                            json_object_object_add(obj, "DS5_CO2", json_object_new_double(CO_FACTOR(DS5_CO2)));
+                            json_object_object_add(obj, "DS5_W", json_object_new_double(transform(WD_FACTOR(DS5_W))));
+                            json_object_object_add(obj, "DS5_CO2", json_object_new_double(transform(CO_FACTOR(DS5_CO2))));
 
                             json_object_object_add(obj, "ZM", json_object_new_int(ZM));
                             json_object_object_add(obj, "MJ", json_object_new_int(MJ));
 
                             json_data = json_object_to_json_string_length(obj, 0, &length);
 
-                            ULOG_DEBUG("[%x]: %s\n", prea.data, json_data);
+                            ULOG_DEBUG("[%x]: %s len : %d \n", prea.data, json_data,length);
                             // sprintf(buf, "kg/teste");
                             sprintf(buf, "edge3");
-                            mqtt_publish(buf, json_data, length, 2);
+                            mqtt_publish(buf, json_data, length, 0);
+                            // write(pipe_fd, json_data, length);
                         }
                         break;
                 }
@@ -927,7 +948,23 @@ static void ustream_state_cb(struct ustream *s)
 
 int ipc_init(void)
 {
-    int fd;
+    int fd,res;
+    
+    int open_mode = O_WRONLY;
+
+    if(access(FIFO_NAME, F_OK) == -1)
+    {
+        res = mknod(FIFO_NAME, 0777, 0);
+        if(res != 0)
+        {
+            ULOG_ERR(stderr, "Could not create fifo %s\n", FIFO_NAME);
+        }
+    }
+    pipe_fd = open(FIFO_NAME, open_mode);
+    if (pipe_fd == NULL) {
+        ULOG_ERR("open fifo failed!\n");
+        return -1;
+    }
 
     ipcs = ipcs_create(&ipc_ctx, "controller");
     if (ipcs == NULL) {

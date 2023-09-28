@@ -9,7 +9,7 @@ export COLOR ?= 1
 export MAKEFLAGS+=--no-print-directory
 
 dirs-y := icc/ net/ proto/
-objs-y := main.o ubus.o config.o message.o utils.o
+objs-y := main.o ubus.o config.o message.o utils.o 
 
 CFLAGS-y = -g -O0 -Wall -I$(CURDIR)/include
 CFLAGS+=$(CFLAGS-y)

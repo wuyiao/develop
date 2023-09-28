@@ -13,11 +13,15 @@
 #include <mosquitto.h>
 #include <mqtt_protocol.h>
 #include <log.h>
+
+#include <json-c/json.h>
+
 #include "mqtt.h"
 #include "config.h"
 #include "message.h"
 
 #define UNUSED(A) (void)(A)
+#define DEVICE_ID 864269069793392
 
 bool process_messages = true;
 int msg_count = 0;
@@ -27,6 +31,7 @@ static bool timed_out = false;
 static int connack_result = 0;
 static struct uloop_fd mosquitto_client;
 static struct uloop_timeout loop_timeout;
+static struct uloop_timeout mqtt_2s_reconnet_timeout;
 static struct uloop_timeout reconnect_timeout;
 
 static void mosquitto_user_reconnect(void);
@@ -88,7 +93,7 @@ void my_connect_callback(struct mosquitto *mosq, void *obj, int result, int flag
 
 	connack_result = result;
 	if (!result) {
-		mosquitto_subscribe_multiple(mosq, NULL, 2, topics, 0, 0, NULL);
+		// mosquitto_subscribe_multiple(mosq, NULL, 2, topics, 0, 0, NULL);
 
 		// for (i = 0; i < unsub_topic_count; i++){
 			// mosquitto_unsubscribe_v5(mosq, NULL, cfg.unsub_topics[i], cfg.unsubscribe_props);
@@ -162,39 +167,39 @@ void mosquitto_print_version(void)
 	ULOG_INFO("mosquitto running on libmosquitto %d.%d.%d.\n", major, minor, revision);
 }
 
-int get_temperature(void)
-{
-	sleep(1); /* Prevent a storm of messages - this pretend sensor works at 1Hz */
-	return random()%100;
-}
+// int get_temperature(void)
+// {
+// 	sleep(1); /* Prevent a storm of messages - this pretend sensor works at 1Hz */
+// 	return random()%100;
+// }
 
-/* This function pretends to read some data from a sensor and publish it.*/
-void publish_sensor_data(struct mosquitto *mosq)
-{
-	char payload[20];
-	int temp;
-	int rc;
+// /* This function pretends to read some data from a sensor and publish it.*/
+// void publish_sensor_data(struct mosquitto *mosq)
+// {
+// 	char payload[20];
+// 	int temp;
+// 	int rc;
 
-	/* Get our pretend data */
-	temp = get_temperature();
-	/* Print it to a string for easy human reading - payload format is highly
-	 * application dependent. */
-	snprintf(payload, sizeof(payload), "%d", temp);
+// 	/* Get our pretend data */
+// 	temp = get_temperature();
+// 	/* Print it to a string for easy human reading - payload format is highly
+// 	 * application dependent. */
+// 	snprintf(payload, sizeof(payload), "%d", temp);
 
-	/* Publish the message
-	 * mosq - our client instance
-	 * *mid = NULL - we don't want to know what the message id for this message is
-	 * topic = "example/temperature" - the topic on which this message will be published
-	 * payloadlen = strlen(payload) - the length of our payload in bytes
-	 * payload - the actual payload
-	 * qos = 2 - publish with QoS 2 for this example
-	 * retain = false - do not use the retained message feature for this message
-	 */
-	rc = mosquitto_publish(mosq, NULL, "example/temperature", strlen(payload), payload, 2, false);
-	if (rc != MOSQ_ERR_SUCCESS) {
-		ULOG_ERR("Error publishing: %s\n", mosquitto_strerror(rc));
-	}
-}
+// 	/* Publish the message
+// 	 * mosq - our client instance
+// 	 * *mid = NULL - we don't want to know what the message id for this message is
+// 	 * topic = "example/temperature" - the topic on which this message will be published
+// 	 * payloadlen = strlen(payload) - the length of our payload in bytes
+// 	 * payload - the actual payload
+// 	 * qos = 2 - publish with QoS 2 for this example
+// 	 * retain = false - do not use the retained message feature for this message
+// 	 */
+// 	rc = mosquitto_publish(mosq, NULL, "example/temperature", strlen(payload), payload, 2, false);
+// 	if (rc != MOSQ_ERR_SUCCESS) {
+// 		ULOG_ERR("Error publishing: %s\n", mosquitto_strerror(rc));
+// 	}
+// }
 
 static void mosquitto_user_reconnect(void)
 {
@@ -214,19 +219,18 @@ int mqtt_publish(char *topic, const void *payload, int length, int qos)
      * qos = 2 - publish with QoS 2 for this example
      * retain = false - do not use the retained message feature for this message
      */
-    rc = mosquitto_publish(mosq, NULL, topic, length, payload, qos, false);
-    switch (rc) {
-        case MOSQ_ERR_SUCCESS:
-            break;
-        case MOSQ_ERR_NO_CONN:
-            mosquitto_user_reconnect();
-            ULOG_INFO("mqtt client reconnect\n");
-            break;
-        default:
-            ULOG_ERR("publish: %s\n", mosquitto_strerror(rc));
-            break;
-    }
-
+    rc = mosquitto_publish_v5(mosq, NULL, topic, length, payload, qos, false,NULL);
+    // switch (rc) {
+    //     case MOSQ_ERR_SUCCESS:
+    //         break;
+    //     case MOSQ_ERR_NO_CONN:
+    //         mosquitto_user_reconnect();
+    //         ULOG_INFO("mqtt client reconnect\n");
+    //         break;
+    //     default:
+    //         ULOG_ERR("publish: %s\n", mosquitto_strerror(rc));
+    //         break;
+    // }
     return rc;
 }
 
@@ -236,7 +240,7 @@ static void mosquitto_client_cb(struct uloop_fd *fd, unsigned int events)
     /* there is no need to loop write, mosquitto lib will do it. */
     if (events & ULOOP_READ)
         mosquitto_loop_read(mosq, 1);
-    else {
+    else if(events & ULOOP_WRITE){
         if (mosquitto_want_write(mosq))
             mosquitto_loop_write(mosq, 1);
     }
@@ -245,6 +249,24 @@ static void mosquitto_client_cb(struct uloop_fd *fd, unsigned int events)
 static void loop_misc(struct uloop_timeout *timeout)
 {
     mosquitto_loop_misc(mosq);
+	uloop_timeout_set(&loop_timeout, 1000);
+}
+
+static void loop_mqtt_reconnect(struct uloop_timeout *timeout)
+{
+	char buf[128] = {0};
+    int length;
+    char *json_data;
+	json_object *obj;
+
+	obj = json_object_new_object();
+	json_object_object_add(obj, "device id : ", json_object_new_int64(DEVICE_ID));
+
+	json_data = json_object_to_json_string_length(obj, 0, &length);
+	sprintf(buf, "edge3");
+	mqtt_publish(buf, json_data, length, 0);
+
+	uloop_timeout_set(&mqtt_2s_reconnet_timeout, 1000);
 }
 
 static void reconnect_cb(struct uloop_timeout *timeout)
@@ -254,24 +276,26 @@ static void reconnect_cb(struct uloop_timeout *timeout)
     sock = mosquitto_socket(mosq);
     if (sock < 0) {
         ULOG_ERR("mosquitto socket invalid\n");
-    } else {
-        ULOG_INFO("stopping mosquitto io watcher(%d)\n", sock);
-    }
-    uloop_fd_delete(&mosquitto_client);
+		uloop_fd_delete(&mosquitto_client);
 
-    if (mosquitto_reconnect_async(mosq) == MOSQ_ERR_SUCCESS) {
-        ULOG_INFO("mqtt async reconnect successed\n");
-        sock = mosquitto_socket(mosq);
-        if (sock < 0) {
-            ULOG_ERR("mosquitto socket invalid\n");
-        } else {
-            ULOG_INFO("starting mosquitto io watcher(%d)\n", sock);
-            mosquitto_client.fd = sock;
-            uloop_fd_add(&mosquitto_client, ULOOP_READ);
-        }
+		if (mosquitto_reconnect_async(mosq) == MOSQ_ERR_SUCCESS) {
+			ULOG_INFO("mqtt async reconnect successed\n");
+			sock = mosquitto_socket(mosq);
+			if (sock < 0) {
+				ULOG_ERR("mosquitto socket invalid\n");
+			} else {
+				ULOG_INFO("starting mosquitto io watcher(%d)\n", sock);
+				mosquitto_client.fd = sock;
+				uloop_fd_add(&mosquitto_client, ULOOP_READ | ULOOP_WRITE);
+			}
+		} else {
+			ULOG_ERR("mqtt async reconnect failed\n");
+		}
     } else {
-        ULOG_ERR("mqtt async reconnect failed\n");
+        ULOG_INFO("--------no-need-reconnect---------\n");
     }
+
+	uloop_timeout_set(&reconnect_timeout, 1000);
 }
 
 int mqtt_init(void)
@@ -305,16 +329,21 @@ int mqtt_init(void)
 	mosquitto_message_v5_callback_set(mosq, my_message_callback);
     mosquitto_publish_v5_callback_set(mosq, my_publish_callback);
 
-    memset(&loop_timeout, 0, sizeof(loop_timeout));
-    loop_timeout.cb = loop_misc;
-    uloop_timeout_set(&loop_timeout, 1000);
+    // memset(&loop_timeout, 0, sizeof(loop_timeout));
+    // loop_timeout.cb = loop_misc;
+    // uloop_timeout_set(&loop_timeout, 1000);
+
+	// memset(&mqtt_2s_reconnet_timeout, 0, sizeof(mqtt_2s_reconnet_timeout));
+    // mqtt_2s_reconnet_timeout.cb = loop_mqtt_reconnect;
+    // uloop_timeout_set(&mqtt_2s_reconnet_timeout, 2000);
 
     memset(&reconnect_timeout, 0, sizeof(reconnect_timeout));
     reconnect_timeout.cb = reconnect_cb;
+	uloop_timeout_set(&reconnect_timeout, 1000);
 
     mosquitto_client.cb = mosquitto_client_cb;
 
-	rc = mosquitto_connect(mosq, ip_str, port, 120);
+	rc = mosquitto_connect(mosq, ip_str, port, 60);
 	if (rc) {
         ULOG_ERR("mosq connect: %s\n", mosquitto_strerror(rc));
 		mosquitto_user_reconnect();
@@ -328,7 +357,7 @@ int mqtt_init(void)
     }
 
     mosquitto_client.fd = sock;
-    uloop_fd_add(&mosquitto_client, ULOOP_READ);
+    uloop_fd_add(&mosquitto_client, ULOOP_READ | ULOOP_WRITE);
 
 out:
     return 0;
@@ -338,4 +367,8 @@ cleanup:
 	mosquitto_lib_cleanup();
 	return -1;
 }
+
+
+
+
 
